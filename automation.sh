@@ -58,3 +58,28 @@ tar -c -C /var/log/apache2 ./*.log -f /tmp/${myname}-httpd-logs-${timestamp}.tar
 aws s3 \
 cp /tmp/${myname}-httpd-logs-${timestamp}.tar
 s3://${s3_bucket}/${myname}-httpd-logs-${timestamp}.tar
+
+
+
+# Check if inventory file exists , if not create inventory.xml file
+inventory="/var/www/html"
+if [[ ! -f ${inventory}/inventory.html ]]; then
+	
+	echo -e 'Log Type\t \tDate Created\t \tType\t \tSize' > ${inventory}/inventory.html
+fi
+
+
+# Inserting Logs into the Inventory file
+if [[ -f ${inventory}/inventory.html ]]; then
+
+    size=$(du -h /tmp/${myname}-httpd-logs-${timestamp}.tar | awk '{print $1}')
+	echo -e "httpd-logs\t \t${timestamp}\t \ttar\t \t${size}" >> ${inventory}/inventory.html
+fi
+
+
+# Create a cron job that runs automation.sh script every minutes/day
+if [[ ! -f /etc/cron.d/automation ]]; then
+
+	echo "* * * * * root /root/Automation_Project/automation.sh" > /etc/cron.d/automation
+fi
+
